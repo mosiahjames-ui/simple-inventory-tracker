@@ -108,15 +108,6 @@
             </div>
         </div>
 
-        <!-- Audit Log Output Container -->
-        <div id="audit-box" class="audit-container hidden">
-            <div style="font-weight: bold; display: flex; justify-content: space-between;">
-                <span>📋 Data Health Report Card</span>
-                <span id="clean-percentage-badge">Data Cleanliness: 100%</span>
-            </div>
-            <div class="audit-scroll" id="audit-log-entries"></div>
-        </div>
-
         <!-- Dashboard Outputs -->
         <div id="dashboard-content" class="hidden">
             <div class="stats-grid">
@@ -132,6 +123,15 @@
                     <div class="stat-label">Sales Change</div>
                     <div class="stat-value" id="val-change">N/A</div>
                 </div>
+            </div>
+
+            <!-- Audit Log Output Container (Safely tucked below the main metrics!) -->
+            <div id="audit-box" class="audit-container hidden">
+                <div style="font-weight: bold; display: flex; justify-content: space-between;">
+                    <span>📋 Data Health Report Card</span>
+                    <span id="clean-percentage-badge">Data Cleanliness: 100%</span>
+                </div>
+                <div class="audit-scroll" id="audit-log-entries"></div>
             </div>
 
             <div class="card">
@@ -180,7 +180,6 @@
             });
         }
 
-        // Object-based discount normalizer matching Question 2 refactoring
         function normalizeDiscount(raw) {
             if (raw === null || raw === undefined || String(raw).trim() === "") {
                 return { value: 0, type: "default" };
@@ -205,7 +204,6 @@
             const auditEntries = [];
             const mapping = {};
             
-            // Map keys based on first row
             Object.keys(REQUIRED_COLUMNS).forEach(req => {
                 const keys = Object.keys(rawRows[0]);
                 const hit = keys.find(k => REQUIRED_COLUMNS[req].includes(k.trim().toLowerCase().replace(/[^a-z0-9]/g, "")));
@@ -216,11 +214,9 @@
                 const issues = [];
                 const rowNum = index + 1;
                 
-                // Raw structural input data values
                 const rawDiscount = row[mapping.discount];
                 const normalized = normalizeDiscount(rawDiscount);
 
-                // Refinement for Question 4: strict zero validation boundary check
                 const isCorruptOrModified = normalized.value === null || normalized.value === undefined || 
                     (String(rawDiscount).trim().toLowerCase() !== String(normalized.value) && 
                      String(rawDiscount).trim().toLowerCase() !== "0" && rawDiscount !== "");
@@ -229,7 +225,6 @@
                     issues.push(`Discount cleaned: "${rawDiscount}" → parsed as ${normalized.value} (${normalized.type})`);
                 }
 
-                // Profit fallback checking code logic
                 let profitValue = parseFloat(row[mapping.profit]);
                 if (isNaN(profitValue)) {
                     issues.push(`Missing profit field: auto-calculated fallback (30% margin applied)`);
@@ -253,7 +248,6 @@
                 };
             });
 
-            // Display Data Health Summary
             const cleanPercentage = (((rawRows.length - auditEntries.length) / rawRows.length) * 100).toFixed(1);
             document.getElementById("clean-percentage-badge").textContent = `File Cleanliness: ${cleanPercentage}%`;
             
