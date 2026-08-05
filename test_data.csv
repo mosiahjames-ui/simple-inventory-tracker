@@ -1,7 +1,0 @@
-date,customer,product,category,region,quantity,price,discount,profit
-2026-07-25,Alice,Widget A,Electronics,North,10,100,15%,200
-2026-07-25,Bob,Widget B,Electronics,South,5,50,0.1,25
-2026-07-25,Charlie,Widget C,Electronics,North,2,200,$20.00,150
-2026-07-26,Dave,Widget D,Electronics,West,1,500,none,400
-2026-07-26,Eve,Widget E,Electronics,East,20,10,N/A,200
-2026-07-26,Frank,Widget F,Electronics,South,1,100,-,50
