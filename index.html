@@ -15,7 +15,7 @@
       color: #333;
     }
     
-    .container {
+    container {
       max-width: 1100px;
       margin: 0 auto;
       background: white;
@@ -32,14 +32,14 @@
     }
 
     /* Dashboard Layout */
-    .stats-grid {
+    stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 16px;
       margin-bottom: 30px;
     }
 
-    .stat-card {
+    stat-card {
       background: #edf2f7;
       padding: 20px;
       border-radius: 8px;
@@ -47,11 +47,11 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    .stat-card.danger {
+    stat-card.danger {
       background: #fed7d7;
     }
 
-    .stat-label {
+    stat-label {
       font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -59,18 +59,18 @@
       margin-bottom: 8px;
     }
 
-    .stat-number {
+    stat-number {
       font-size: 2rem;
       font-weight: bold;
       color: #2d3748;
     }
 
-    .loss-text {
+    loss-text {
       color: #e53e3e;
     }
 
     /* Controls Section */
-    .controls {
+    controls {
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -80,24 +80,24 @@
       border-radius: 8px;
     }
 
-    .filter-group {
+    filter-group {
       display: flex;
       align-items: center;
       gap: 15px;
     }
 
-    .filter-label {
+    filter-label {
       font-weight: 600;
       color: #4a5568;
       min-width: 120px;
     }
 
-    .radio-group {
+    radio-group {
       display: flex;
       gap: 20px;
     }
 
-    .radio-group label {
+    radio-group label {
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -105,7 +105,7 @@
       font-size: 0.95rem;
     }
 
-    .search-input {
+    search-input {
       padding: 10px 15px;
       width: 100%;
       max-width: 300px;
@@ -115,7 +115,7 @@
     }
 
     /* Table Styles */
-    .table-container {
+    table-container {
       overflow-x: auto;
       margin-top: 20px;
       border-radius: 8px;
@@ -149,19 +149,19 @@
       background-color: #f8fafc;
     }
 
-    .negative-profit {
+    negative-profit {
       color: #e53e3e;
       font-weight: bold;
     }
 
-    .loading-overlay {
+    loading-overlay {
       text-align: center;
       padding: 40px;
       font-style: italic;
       color: #718096;
     }
 
-    .error-message {
+    error-message {
       color: #e53e3e;
       background-color: #fff5f5;
       padding: 15px;
@@ -237,170 +237,184 @@
     </div>
   </div>
 
-    <script>
-    const DATA_URL = 'Sample - Superstore.csv';
-    let masterProblemOrders = [];
+  <script>
+  const DATA_URL = 'Sample - Superstore.csv';
+  let masterProblemOrders = [];
 
-    async function init() {
-      try {
-        Papa.parse(DATA_URL, {
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-          complete: function(results) {
-            processData(results.data);
-          },
-          error: function(err) {
-            showError("Error parsing CSV: " + err.message);
-          }
-        });
-      } catch (err) {
-        showError("Failed to fetch data: " + err.message);
+  async function init() {
+    try {
+      const response = await fetch(DATA_URL);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    }
-
-    function showError(msg) {
-      const errContainer = document.getElementById('error-container');
-      errContainer.textContent = msg;
-      errContainer.style.display = 'block';
-      document.getElementById('loading').style.display = 'none';
-    }
-
-    // Helper to find value by multiple possible keys
-    function findKey(row, keys) {
-      const lowerRowKeys = Object.keys(row).map(k => k.toLowerCase());
-      for (const key of keys) {
-        const lowerKey = key.toLowerCase();
-        const index = lowerRowKeys.indexOf(lowerKey);
-        if (index !== -1) {
-          const val = row[Object.keys(row)[index]];
-          if (val !== undefined && val !== null && val !== '') return val;
+      const csvText = await response.text();
+      Papa.parse(csvText, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          processData(results.data);
+        },
+        error: function(err) {
+          showError("Error parsing CSV: " + err.message);
         }
+      });
+    } catch (err) {
+      showError("Failed to fetch data: " + err.message);
+    }
+  }
+
+  function showError(msg) {
+    const errContainer = document.getElementById('error-container');
+    errContainer.textContent = msg;
+    errContainer.style.display = 'block';
+    document.getElementById('loading').style.display = 'none';
+  }
+
+  // Helper to find value by multiple possible keys
+  function findKey(row, keys) {
+    const lowerRowKeys = Object.keys(row).map(k => k.toLowerCase());
+    for (const key of keys) {
+      const lowerKey = key.toLowerCase();
+      const index = lowerRowKeys.indexOf(lowerKey);
+      if (index!== -1) {
+        const val = row[Object.keys(row)[index]];
+        if (val!== undefined && val!== null && val!== '') return val;
       }
-      return '';
     }
+    return '';
+  }
 
-    // 1. Missing value handling
-    function cleanRow(row) {
-      // row keys are already lowercased in processData
-      const discount = row['discount']?? row['disc']?? null;
-      const profit = row['profit']?? row['margin']?? null;
+  // 1. Missing value handling
+  function cleanRow(row) {
+    // row keys are already lowercased in processData
+    const discount = row['discount']?? row['disc']?? null;
+    const profit = row['profit']?? row['margin']?? null;
 
-      row.discountValue = (discount === '' || discount == null)? null : parseFloat(discount);
-      row.discountIsUnknown = row.discountValue === null;
+    row.discountValue = (discount === '' || discount == null)? null : parseFloat(discount);
+    row.discountIsUnknown = row.discountValue === null;
 
-      row.profitValue = (profit === '' || profit == null)? null : parseFloat(profit);
-      row.profitIsEstimated = row.profitValue === null;
+    row.profitValue = (profit === '' || profit == null)? null : parseFloat(profit);
+    row.profitIsEstimated = row.profitValue === null;
 
-      return row;
-    }
+    return row;
+  }
 
-    function processData(data) {
-      masterProblemOrders = [];
+  function processData(data) {
+    masterProblemOrders = [];
 
-      data.forEach(row => {
-        // Normalize row keys to lowercase for robust access
-        const normalizedRow = {};
-        Object.keys(row).forEach(key => {
-          if (key) {
-            normalizedRow[key.trim().toLowerCase()] = row[key];
-          }
-        });
-
-        const cleanedRow = cleanRow(normalizedRow);
-        const sales = parseFloat(normalizedRow['sales']) || 0;
-        const profit = cleanedRow.profitValue?? 0;
-        const discount = cleanedRow.discountValue?? 0;
-
-        // Use cleaned values for filtering logic
-        if (profit < 0 || discount >= 0.20) {
-          const dateInfo = parseDate(normalizedRow['order date']);
-          masterProblemOrders.push({
-            orderId: normalizedRow['order id'] || 'N/A',
-            date: dateInfo.date || dateInfo.original || 'N/A',
-            dateFlagged: dateInfo.flagged,
-            customer: normalizedRow['customer name'] || 'Unknown Customer',
-            product: normalizedRow['product name'] || 'Unknown Product',
-            sales: sales,
-            discount: discount,
-            profit: profit,
-            profitIsEstimated: cleanedRow.profitIsEstimated,
-            discountIsUnknown: cleanedRow.discountIsUnknown
-          });
+    data.forEach(row => {
+      // Normalize row keys to lowercase for robust access
+      const normalizedRow = {};
+      Object.keys(row).forEach(key => {
+        if (key) {
+          normalizedRow[key.trim().toLowerCase()] = row[key];
         }
       });
 
-      masterProblemOrders.sort((a, b) => a.profit - b.profit);
+      const cleanedRow = cleanRow(normalizedRow);
+      const sales = parseFloat(normalizedRow['sales']) || 0;
+      const profit = cleanedRow.profitValue?? 0;
+      const discount = cleanedRow.discountValue?? 0;
 
-      document.querySelectorAll('input[name="view-filter"]').forEach(radio => {
-        radio.addEventListener('change', updateDashboard);
-      });
-      document.getElementById('search-input').addEventListener('input', updateDashboard);
-
-      updateDashboard();
-    }
-
-    function updateDashboard() {
-      const selectedView = document.querySelector('input[name="view-filter"]:checked').value;
-      const searchTerm = document.getElementById('search-input').value.toLowerCase();
-
-      let filtered = [...masterProblemOrders];
-      if (selectedView === 'loss') {
-        filtered = filtered.filter(o => o.profit < 0);
-      } else if (selectedView === 'discount') {
-        filtered = filtered.filter(o => o.discount >= 0.20);
+      // Use cleaned values for filtering logic
+      if (profit < 0 || discount >= 0.20) {
+        const dateInfo = parseDate(normalizedRow['order date']);
+        masterProblemOrders.push({
+          orderId: normalizedRow['order id'] || 'N/A',
+          date: dateInfo.date || dateInfo.original || 'N/A',
+          dateFlagged: dateInfo.flagged,
+          customer: normalizedRow['customer name'] || 'Unknown Customer',
+          product: normalizedRow['product name'] || 'Unknown Product',
+          sales: sales,
+          discount: discount,
+          profit: profit,
+          profitIsEstimated: cleanedRow.profitIsEstimated,
+          discountIsUnknown: cleanedRow.discountIsUnknown
+        });
       }
+    });
 
-      if (searchTerm) {
-        filtered = filtered.filter(o => 
-          o.customer.toLowerCase().includes(searchTerm) || 
-          o.product.toLowerCase().includes(searchTerm)
-        );
-      }
+    masterProblemOrders.sort((a, b) => a.profit - b.profit);
 
-      renderUI(filtered);
+    document.querySelectorAll('input[name="view-filter"]').forEach(radio => {
+      radio.addEventListener('change', updateDashboard);
+    });
+    document.getElementById('search-input').addEventListener('input', updateDashboard);
+
+    updateDashboard();
+  }
+
+  function updateDashboard() {
+    const selectedView = document.querySelector('input[name="view-filter"]:checked').value;
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+    let filtered = [...masterProblemOrders];
+    if (selectedView === 'loss') {
+      filtered = filtered.filter(o => o.profit < 0);
+    } else if (selectedView === 'discount') {
+      filtered = filtered.filter(o => o.discount >= 0.20);
     }
 
-    function renderUI(orders) {
-      let totalLoss = 0;
-      let totalDiscountSum = 0;
-      
-      orders.forEach(o => {
-        if (o.profit < 0) totalLoss += Math.abs(o.profit);
-        totalDiscountSum += o.discount;
-      });
-
-      const avgDiscount = orders.length > 0 ? (totalDiscountSum / orders.length) : 0;
-
-      document.getElementById('total-loss-display').textContent = 
-        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalLoss);
-      document.getElementById('problem-orders-display').textContent = orders.length.toLocaleString();
-      document.getElementById('avg-discount-display').textContent = (avgDiscount * 100).toFixed(1) + '%';
-
-      const tableBody = document.getElementById('table-body');
-      tableBody.innerHTML = '';
-
-      orders.forEach(order => {
-        const tr = document.createElement('tr');
-        const profitClass = order.profit < 0 ? 'negative-profit' : '';
-
-        tr.innerHTML = `
-          <td><strong>${order.orderId}</strong></td>
-          <td>${order.date}</td>
-          <td>${order.customer}</td>
-          <td>${order.product}</td>
-          <td>$${order.sales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-          <td>${(order.discount * 100).toFixed(0)}%</td>
-          <td class="${profitClass}">$${order.profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        `;
-        tableBody.appendChild(tr);
-      });
-
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('dashboard-content').style.display = 'block';
+    if (searchTerm) {
+      filtered = filtered.filter(o => 
+        o.customer.toLowerCase().includes(searchTerm) || 
+        o.product.toLowerCase().includes(searchTerm)
+      );
     }
 
-    init();
+    renderUI(filtered);
+  }
+
+  function renderUI(orders) {
+    let totalLoss = 0;
+    let totalDiscountSum = 0;
+    
+    orders.forEach(o => {
+      if (o.profit < 0) totalLoss += Math.abs(o.profit);
+      totalDiscountSum += o.discount;
+    });
+
+    const avgDiscount = orders.length > 0? (totalDiscountSum / orders.length) : 0;
+
+    document.getElementById('total-loss-display').textContent = 
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalLoss);
+    document.getElementById('problem-orders-display').textContent = orders.length.toLocaleString();
+    document.getElementById('avg-discount-display').textContent = (avgDiscount * 100).toFixed(1) + '%';
+
+    const tableBody = document.getElementById('table-body');
+    tableBody.innerHTML = '';
+
+    orders.forEach(order => {
+      const tr = document.createElement('tr');
+      const profitClass = order.profit < 0? 'negative-profit' : '';
+
+      tr.innerHTML = `
+        <td><strong>${order.orderId}</strong></td>
+        <td>${order.date}</td>
+        <td>${order.customer}</td>
+        <td>${order.product}</td>
+        <td>$${order.sales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td>${(order.discount * 100).toFixed(0)}%</td>
+        <td class="${profitClass}">$${order.profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('dashboard-content').style.display = 'block';
+  }
+
+  init();
+  function parseDate(dateStr) {
+  if (!dateStr) return new Date();
+  
+  // Clean quotes/spaces and parse standard date formats
+  const cleanStr = String(dateStr).replace(/["']/g, '').trim();
+  const parsed = new Date(cleanStr);
+  
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
   </script>
 </body>
 </html>
